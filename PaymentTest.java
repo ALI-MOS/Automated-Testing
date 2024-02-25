@@ -4,7 +4,10 @@ import java.time.*;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
 import org.openqa.selenium.By;
+
 
 
 public class PaymentTest {
@@ -15,27 +18,14 @@ public class PaymentTest {
 	public static String cardDate = "0826";
 	public static String cardCvv = "123";
 	
-	public WebDriver driver;
+	private WebDriver driver;
+	private WebDriverWait wait;
 
 	public static void main(String[] args) {
 		PaymentTest test = new PaymentTest();
 		test.login();
-		
-		// click on request till payment
-		test.driver.findElement(By.cssSelector("#sections > section:nth-child(1) > div > div.flex.flex-col.items-center.lg\\:items-start > div > button")).click();
-		test.driver.findElement(By.cssSelector("#id_dream_title")).sendKeys("my dream");
-		test.driver.findElement(By.cssSelector("#dream-form > fieldset > button")).click();
-		
-		// click on creditCard 
-		test.driver.findElement(By.cssSelector("#choose-method > div > div > div:nth-child(3) > label")).click();
-		test.driver.findElement(By.cssSelector("#choose-method > div > div > div:nth-child(3) > div > div > button")).click();
-		
-		// add details
-		test.driver.switchTo().frame("card.number");
-		WebElement cardNoTextbox = test.driver.findElement(By.cssSelector("body > form > input[type=tel]:nth-child(1)"));
-		cardNoTextbox.sendKeys(cardNo);
-		test.driver.switchTo().defaultContent();
-
+		test.requestDream();
+		test.creditPay();
 	}
 	
 	public PaymentTest() {
@@ -43,6 +33,7 @@ public class PaymentTest {
 		driver = new ChromeDriver();
 		driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(20));
 		driver.manage().window().maximize();
+		wait = new WebDriverWait(driver, Duration.ofSeconds(20)); 
 		
 		// open site
 		driver.get(url);
@@ -61,5 +52,41 @@ public class PaymentTest {
 		emailTextbox.sendKeys(email);
 		passwordTextbox.sendKeys(password);
 		submitLoginButton.click();
+	}
+	
+	public void requestDream() {
+		WebElement requestButton = wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector("#sections > section:nth-child(1) > div > div.flex.flex-col.items-center.lg\\:items-start > div > button")));
+		requestButton.click();
+		
+		WebElement dreamTitleTextbox = driver.findElement(By.cssSelector("#id_dream_title"));
+		dreamTitleTextbox.sendKeys("my dream");
+		
+		WebElement continueButton = driver.findElement(By.cssSelector("#dream-form > fieldset > button"));
+		continueButton.click();
+	}
+	
+	public void creditPay() {
+		WebElement creditCardOption = driver.findElement(By.cssSelector("#choose-method > div > div > div:nth-child(3) > label"));
+		creditCardOption.click();
+		
+		WebElement continueButton = driver.findElement(By.cssSelector("#choose-method > div > div > div:nth-child(3) > div > div > button"));
+		continueButton.click();
+		
+		driver.switchTo().frame("card.number");
+		WebElement cardNoTextbox = wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector("body > form > input[type=tel]:nth-child(1)")));
+		cardNoTextbox.sendKeys(cardNo);
+		driver.switchTo().defaultContent();
+		
+		WebElement cardDateTextbox = wait.until(ExpectedConditions.elementToBeClickable(By.xpath("/html/body/main/div/div/form/div[3]/div[2]/input")));
+		cardDateTextbox.sendKeys(cardDate);
+		
+		driver.switchTo().frame("card.cvv");
+		WebElement cardCVVTextbox = wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector("body > form > input[type=tel]")));
+		cardCVVTextbox.sendKeys(cardCvv);
+		driver.switchTo().defaultContent();
+		
+		WebElement submitButton = wait.until(ExpectedConditions.elementToBeClickable(By.xpath("/html/body/main/div/div/form/div[10]/div/button")));
+		submitButton.click();
+		
 	}
 }
